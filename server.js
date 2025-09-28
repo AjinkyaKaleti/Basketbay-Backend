@@ -32,9 +32,11 @@ app.use("/api/orders", orderRoutes);
 
 app.use("/api/payment", paymentRoutes);
 
+app.use("/api/products", productRoutes);
+
 app.use("/uploads", express.static("uploads"));
 
-app.use("/api/products", productRoutes);
+// PORT for Railway (Railway sets process.env.PORT automatically)
 
 const PORT = process.env.PORT || 5000;
 
