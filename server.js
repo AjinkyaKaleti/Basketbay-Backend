@@ -36,7 +36,7 @@ app.use("/uploads", express.static("uploads"));
 
 app.use("/api/products", productRoutes);
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 connectDb().then(() => {
   app.listen(PORT, () => {
