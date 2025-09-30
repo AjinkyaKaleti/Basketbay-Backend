@@ -1,24 +1,6 @@
-const nodemailer = require("nodemailer");
+const sgMail = require("@sendgrid/mail");
 
-// const transporter = nodemailer.createTransport({
-//   service: "gmail",
-//   host: "smtp.gmail.com",
-//   secure: false,
-//   auth: {
-//     user: process.env.EMAIL_USER,
-//     pass: process.env.EMAIL_PASS,
-//   },
-// });
-
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 /**
  * Send an email
@@ -28,9 +10,9 @@ const transporter = nodemailer.createTransport({
  */
 const sendEmail = async (to, subject, html) => {
   try {
-    await transporter.sendMail({
-      from: `"BasketBay" <${process.env.EMAIL_USER}>`,
+    await sgMail.send({
       to,
+      from: process.env.EMAIL_USER, // must be a verified sender
       subject,
       html,
     });

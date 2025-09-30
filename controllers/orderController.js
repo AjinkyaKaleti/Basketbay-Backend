@@ -1,7 +1,9 @@
 const Order = require("../models/user-order-modal");
 const User = require("../models/user-modal"); // to get customer's email
-const nodemailer = require("nodemailer");
 const Product = require("../models/admin-product-modal");
+const sgMail = require("@sendgrid/mail");
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // POST: create a new order
 const createOrder = async (req, res) => {
@@ -45,26 +47,6 @@ const createOrder = async (req, res) => {
         .json({ message: "Customer not found to send email" });
     }
 
-    // const transporter = nodemailer.createTransport({
-    //   service: "gmail",
-    //   host: "smtp.gmail.com",
-    //   secure: false,
-    //   auth: {
-    //     user: process.env.EMAIL_USER,
-    //     pass: process.env.EMAIL_PASS,
-    //   },
-    // });
-
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
     const productList = products
       .map(
         (p) =>
@@ -74,15 +56,23 @@ const createOrder = async (req, res) => {
       )
       .join("\n");
 
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
+    const msg = {
       to: customer.email,
+      from: process.env.EMAIL_USER,
       subject: `Order Confirmation - ${savedOrder._id}`,
-      text: `Greetings ${customer.firstname},\n\nThank you for your order!\n\nOrder ID: ${savedOrder._id}\nProducts:\n${productList}\n\nTotal Amount: ₹${totalAmount}\nPayment Method: ${paymentMethod}\n\nYour order will be processed shortly.`,
+      html: `
+        <p>Greetings ${customer.firstname},</p>
+        <p>Thank you for your order!</p>
+        <p><strong>Order ID:</strong> ${savedOrder._id}</p>
+        <p><strong>Products:</strong><br/>${productList}</p>
+        <p><strong>Total Amount:</strong> ₹${totalAmount}</p>
+        <p><strong>Payment Method:</strong> ${paymentMethod}</p>
+        <p>Your order will be processed shortly.</p>
+      `,
     };
 
-    // Send email
-    await transporter.sendMail(mailOptions);
+    // Send email to customer
+    await sgMail.send(msg);
 
     res
       .status(201)

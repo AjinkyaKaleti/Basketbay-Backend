@@ -1,6 +1,8 @@
-const nodemailer = require("nodemailer");
+const sgMail = require("@sendgrid/mail");
 const User = require("../models/user-modal");
 const jwt = require("jsonwebtoken");
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 let otpStore = {}; // { email: { otp, expiresAt } }
 
@@ -35,34 +37,15 @@ const sendOtp = async (req, res) => {
 
     console.log(`Generated OTP for ${email}: ${otp}`);
 
-    // const transporter = nodemailer.createTransport({
-    //   service: "gmail",
-    //   host: "smtp.gmail.com",
-    //   secure: false,
-    //   auth: {
-    //     user: process.env.EMAIL_USER,
-    //     pass: process.env.EMAIL_PASS,
-    //   },
-    // });
-
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
+    const msg = {
       to: email,
+      from: process.env.EMAIL_USER, // your verified sender in SendGrid
       subject: "Your BasketBay OTP",
       text: `Your OTP is ${otp}. It will expire in 5 minutes.`,
+      html: `<p>Your OTP is <strong>${otp}</strong>. It will expire in 5 minutes.</p>`,
     };
 
-    await transporter.sendMail(mailOptions);
+    await sgMail.send(msg);
 
     res.json({ message: `OTP sent to ${email}` });
   } catch (err) {
