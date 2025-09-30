@@ -54,21 +54,19 @@ const createOrder = async (req, res) => {
       )
       .join("<br/>");
 
-    const html = `
-      <p>Greetings ${customer.firstname},</p>
-      <p>Thank you for your order!</p>
-      <p><strong>Order ID:</strong> ${savedOrder._id}</p>
-      <p><strong>Products:</strong><br/>${productList}</p>
-      <p><strong>Total Amount:</strong> ₹${totalAmount}</p>
-      <p><strong>Payment Method:</strong> ${paymentMethod}</p>
-      <p>Your order will be processed shortly.</p>
-    `;
-
     // Send email to customer
     const emailSent = await sendEmail(
       customer.email,
       `Order Confirmation - ${savedOrder._id}`,
-      html
+      `
+    <p>Greetings ${customer.firstname},</p>
+    <p>Thank you for your order!</p>
+    <p><strong>Order ID:</strong> ${savedOrder._id}</p>
+    <p><strong>Products:</strong><br/>${productList}</p>
+    <p><strong>Total Amount:</strong> ₹${totalAmount}</p>
+    <p><strong>Payment Method:</strong> ${paymentMethod}</p>
+    <p>Your order will be processed shortly.</p>
+  `
     );
 
     if (!emailSent) console.warn("Order confirmation email failed to send");

@@ -37,7 +37,11 @@ const sendOtp = async (req, res) => {
 
     const html = `<p>Your OTP is <strong>${otp}</strong>. It will expire in 5 minutes.</p>`;
 
-    const emailSent = await sendEmail(email, "Your BasketBay OTP", html);
+    const emailSent = await sendEmail(
+      email,
+      "Your BasketBay OTP",
+      `<p>Your OTP is <strong>${otp}</strong>. It will expire in 5 minutes.</p>`
+    );
     if (!emailSent) {
       return res
         .status(500)
