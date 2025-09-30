@@ -12,6 +12,10 @@ const sendEmail = async (to, subject, html) => {
       .setSubject(subject)
       .setHtml(html);
 
+    console.log("API key present?", !!process.env.MAILERSEND_API_KEY);
+    console.log("API key value:", process.env.MAILERSEND_API_KEY);
+    console.log("MAILER_FROM:", process.env.MAILER_FROM);
+
     await mailerSend.email.send(emailParams);
     console.log("Test email sent successfully");
   } catch (err) {
