@@ -7,7 +7,7 @@ const mailer = new MailerSend({
 const sendEmail = async (to, subject, html) => {
   try {
     const response = await mailer.email.send({
-      from: "your_verified_email@yourdomain.com", // verify in MailerSend
+      from: "ajinkyajc1994@gmail.com", // verify in MailerSend
       to: [to],
       subject,
       html, // use html content
