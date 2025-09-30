@@ -1,19 +1,19 @@
-const { MailerSend } = require("mailersend");
+const { MailerSend, EmailParams, Recipient, Sender } = require("mailersend");
 
-const mailer = new MailerSend({
+const mailerSend = new MailerSend({
   api_key: process.env.MAILERSEND_API_KEY, // Railway env var
 });
 
 const sendEmail = async (to, subject, html) => {
   try {
-    const response = await mailer.email.send({
-      from: "ajinkyajc1994@gmail.com", // verify in MailerSend
-      to: [to],
-      subject,
-      html, // use html content
-    });
-    console.log("Email sent successfully", response);
-    return true;
+    const emailParams = new EmailParams()
+      .setFrom(new Sender("ajinkyajc1994@gmail.com"))
+      .setTo([new Recipient(to)])
+      .setSubject(subject)
+      .setHtml(html);
+
+    await mailerSend.email.send(emailParams);
+    console.log("Test email sent successfully");
   } catch (err) {
     console.error("Email sending failed:", err.message);
     return false;

@@ -71,17 +71,11 @@ const createOrder = async (req, res) => {
       html
     );
 
-    if (emailSent) {
-      res.status(201).json({
-        message: "Order placed! Check your email.",
-        order: savedOrder,
-      });
-    } else {
-      res.status(201).json({
-        message: "Order placed, but failed to send email.",
-        order: savedOrder,
-      });
-    }
+    if (!emailSent) console.warn("Order confirmation email failed to send");
+
+    res
+      .status(201)
+      .json({ message: "Order placed! Check your email.", order: savedOrder });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
