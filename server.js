@@ -7,6 +7,7 @@ const connectDb = require("./utils/db");
 const orderRoutes = require("./router/orderRoutes");
 const productRoutes = require("./router/productRoutes");
 const paymentRoutes = require("./router/payment-router");
+const uploadRoute = require("./routes/upload");
 const cors = require("cors");
 
 // dotenv.config();
@@ -34,7 +35,8 @@ app.use("/api/payment", paymentRoutes);
 
 app.use("/api/products", productRoutes);
 
-app.use("/uploads", express.static("uploads"));
+// app.use("/uploads", express.static("uploads"));
+app.use("/api/upload", uploadRoute);
 
 // PORT for Railway (Railway sets process.env.PORT automatically)
 
