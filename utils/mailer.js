@@ -6,7 +6,7 @@ const transporter = nodemailer.createTransport({
   secure: true, // true for SSL (port 465)
   auth: {
     user: process.env.MAILER_FROM,
-    pass: process.env.MAILERSEND_API_KEY, // Zoho app password
+    pass: process.env.MAILER_APP_PASSWORD, // Zoho app password
   },
 });
 
