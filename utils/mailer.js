@@ -1,4 +1,4 @@
-const MailerSend = require("@mailersend/mailersend");
+const { MailerSend } = require("mailersend");
 
 const mailer = new MailerSend({
   api_key: process.env.MAILERSEND_API_KEY, // Railway env var
