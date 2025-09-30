@@ -1,7 +1,7 @@
 const Order = require("../models/user-order-modal");
 const User = require("../models/user-modal"); // to get customer's email
 const Product = require("../models/admin-product-modal");
-const { sendEmail } = require("./mailer");
+const { sendEmail } = require("../utils/mailer");
 
 // POST: create a new order
 const createOrder = async (req, res) => {
@@ -72,19 +72,15 @@ const createOrder = async (req, res) => {
     );
 
     if (emailSent) {
-      res
-        .status(201)
-        .json({
-          message: "Order placed! Check your email.",
-          order: savedOrder,
-        });
+      res.status(201).json({
+        message: "Order placed! Check your email.",
+        order: savedOrder,
+      });
     } else {
-      res
-        .status(201)
-        .json({
-          message: "Order placed, but failed to send email.",
-          order: savedOrder,
-        });
+      res.status(201).json({
+        message: "Order placed, but failed to send email.",
+        order: savedOrder,
+      });
     }
   } catch (err) {
     console.error(err);

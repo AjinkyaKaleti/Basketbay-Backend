@@ -1,6 +1,6 @@
 const User = require("../models/user-modal");
 const jwt = require("jsonwebtoken");
-const { sendEmail } = require("./mailer");
+const { sendEmail } = require("../utils/mailer");
 
 let otpStore = {}; // { email: { otp, expiresAt } }
 
