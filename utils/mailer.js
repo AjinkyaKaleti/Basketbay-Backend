@@ -15,7 +15,7 @@ const sendEmail = async (to, subject, html) => {
     await mailerSend.email.send(emailParams);
     console.log("Test email sent successfully");
   } catch (err) {
-    console.error("Email sending failed:", err.message);
+    console.error("Email sending failed:", err);
     return false;
   }
 };
