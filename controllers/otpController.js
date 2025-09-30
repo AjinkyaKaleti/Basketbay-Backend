@@ -37,8 +37,7 @@ const sendOtp = async (req, res) => {
 
     const html = `<p>Your OTP is <strong>${otp}</strong>. It will expire in 5 minutes.</p>`;
 
-    const emailSent = await sendEmail(email, "Your OTP Code", html);
-
+    const emailSent = await sendEmail(email, "Your BasketBay OTP", html);
     if (!emailSent) {
       return res
         .status(500)
@@ -46,7 +45,7 @@ const sendOtp = async (req, res) => {
     }
 
     console.log(`Generated OTP for ${email}: ${otp}`);
-    res.json({ message: `OTP sent to ${email}` });
+    return res.json({ message: `OTP sent to ${email}` });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to send OTP" });

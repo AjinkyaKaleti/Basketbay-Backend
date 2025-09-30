@@ -1,23 +1,25 @@
-const { MailerSend, EmailParams, Recipient, Sender } = require("mailersend");
+const nodemailer = require("nodemailer");
 
-const mailerSend = new MailerSend({
-  apiKey: process.env.MAILERSEND_API_KEY, // must match exactly
+const transporter = nodemailer.createTransport({
+  host: "smtp.zoho.com",
+  port: 465, // SSL port. Use 587 + secure:false if you prefer TLS
+  secure: true, // true for 465
+  auth: {
+    user: process.env.MAILER_FROM, // your Zoho email
+    pass: process.env.MAILERSEND_API_KEY, // Zoho App Password stored in this var
+  },
 });
 
 const sendEmail = async (to, subject, html) => {
   try {
-    const emailParams = new EmailParams()
-      .setFrom(new Sender(process.env.MAILER_FROM))
-      .setTo([new Recipient(to)])
-      .setSubject(subject)
-      .setHtml(html);
-
-    console.log("API key present?", !!process.env.MAILERSEND_API_KEY);
-    console.log("API key value:", process.env.MAILERSEND_API_KEY);
-    console.log("MAILER_FROM:", process.env.MAILER_FROM);
-
-    await mailerSend.email.send(emailParams);
-    console.log("Test email sent successfully");
+    const info = await transporter.sendMail({
+      from: process.env.MAILER_FROM,
+      to,
+      subject,
+      html,
+    });
+    console.log("Email sent:", info.messageId);
+    return true;
   } catch (err) {
     console.error("Email sending failed:", err);
     return false;
