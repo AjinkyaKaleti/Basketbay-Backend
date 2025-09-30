@@ -1,7 +1,7 @@
 const { MailerSend, EmailParams, Recipient, Sender } = require("mailersend");
 
 const mailerSend = new MailerSend({
-  api_key: process.env.MAILERSEND_API_KEY, // Railway env var
+  apiKey: process.env.MAILERSEND_API_KEY, // must match exactly
 });
 
 const sendEmail = async (to, subject, html) => {
