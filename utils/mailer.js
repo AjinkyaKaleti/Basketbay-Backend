@@ -7,7 +7,7 @@ const mailerSend = new MailerSend({
 const sendEmail = async (to, subject, html) => {
   try {
     const emailParams = new EmailParams()
-      .setFrom(new Sender(process.env.EMAIL_USER))
+      .setFrom(new Sender(process.env.MAILER_FROM))
       .setTo([new Recipient(to)])
       .setSubject(subject)
       .setHtml(html);
