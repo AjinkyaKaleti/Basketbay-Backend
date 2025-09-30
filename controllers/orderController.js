@@ -1,9 +1,7 @@
 const Order = require("../models/user-order-modal");
 const User = require("../models/user-modal"); // to get customer's email
 const Product = require("../models/admin-product-modal");
-const sgMail = require("@sendgrid/mail");
-
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const { sendEmail } = require("./mailer");
 
 // POST: create a new order
 const createOrder = async (req, res) => {
@@ -54,29 +52,40 @@ const createOrder = async (req, res) => {
             p.discount || 0
           }%`
       )
-      .join("\n");
+      .join("<br/>");
 
-    const msg = {
-      to: customer.email,
-      from: process.env.EMAIL_USER,
-      subject: `Order Confirmation - ${savedOrder._id}`,
-      html: `
-        <p>Greetings ${customer.firstname},</p>
-        <p>Thank you for your order!</p>
-        <p><strong>Order ID:</strong> ${savedOrder._id}</p>
-        <p><strong>Products:</strong><br/>${productList}</p>
-        <p><strong>Total Amount:</strong> ₹${totalAmount}</p>
-        <p><strong>Payment Method:</strong> ${paymentMethod}</p>
-        <p>Your order will be processed shortly.</p>
-      `,
-    };
+    const html = `
+      <p>Greetings ${customer.firstname},</p>
+      <p>Thank you for your order!</p>
+      <p><strong>Order ID:</strong> ${savedOrder._id}</p>
+      <p><strong>Products:</strong><br/>${productList}</p>
+      <p><strong>Total Amount:</strong> ₹${totalAmount}</p>
+      <p><strong>Payment Method:</strong> ${paymentMethod}</p>
+      <p>Your order will be processed shortly.</p>
+    `;
 
     // Send email to customer
-    await sgMail.send(msg);
+    const emailSent = await sendEmail(
+      customer.email,
+      `Order Confirmation - ${savedOrder._id}`,
+      html
+    );
 
-    res
-      .status(201)
-      .json({ message: "Order placed! Check your email.", order: savedOrder });
+    if (emailSent) {
+      res
+        .status(201)
+        .json({
+          message: "Order placed! Check your email.",
+          order: savedOrder,
+        });
+    } else {
+      res
+        .status(201)
+        .json({
+          message: "Order placed, but failed to send email.",
+          order: savedOrder,
+        });
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });

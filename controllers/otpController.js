@@ -1,8 +1,6 @@
-const sgMail = require("@sendgrid/mail");
 const User = require("../models/user-modal");
 const jwt = require("jsonwebtoken");
-
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const { sendEmail } = require("./mailer");
 
 let otpStore = {}; // { email: { otp, expiresAt } }
 
@@ -37,17 +35,15 @@ const sendOtp = async (req, res) => {
 
     console.log(`Generated OTP for ${email}: ${otp}`);
 
-    const msg = {
-      to: email,
-      from: process.env.EMAIL_USER, // your verified sender in SendGrid
-      subject: "Your BasketBay OTP",
-      text: `Your OTP is ${otp}. It will expire in 5 minutes.`,
-      html: `<p>Your OTP is <strong>${otp}</strong>. It will expire in 5 minutes.</p>`,
-    };
+    const html = `<p>Your OTP is <strong>${otp}</strong>. It will expire in 5 minutes.</p>`;
 
-    await sgMail.send(msg);
+    const emailSent = await sendEmail(email, "Your BasketBay OTP", html);
 
-    res.json({ message: `OTP sent to ${email}` });
+    if (emailSent) {
+      res.json({ message: `OTP sent to ${email}` });
+    } else {
+      res.status(500).json({ message: "Failed to send OTP" });
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to send OTP" });

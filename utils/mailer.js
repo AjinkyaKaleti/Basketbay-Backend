@@ -1,24 +1,22 @@
-const sgMail = require("@sendgrid/mail");
+const MailerSend = require("@mailersend/mailersend");
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const mailer = new MailerSend({
+  api_key: process.env.MAILERSEND_API_KEY, // Railway env var
+});
 
-/**
- * Send an email
- * @param {string} to - recipient email
- * @param {string} subject - email subject
- * @param {string} html - email body
- */
 const sendEmail = async (to, subject, html) => {
   try {
-    await sgMail.send({
-      to,
-      from: process.env.EMAIL_USER, // must be a verified sender
+    const response = await mailer.email.send({
+      from: "your_verified_email@yourdomain.com", // verify in MailerSend
+      to: [to],
       subject,
-      html,
+      html, // use html content
     });
-    console.log("Email sent to", to);
+    console.log("Email sent successfully", response);
+    return true;
   } catch (err) {
     console.error("Email sending failed:", err.message);
+    return false;
   }
 };
 
