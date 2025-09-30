@@ -7,7 +7,7 @@ const connectDb = require("./utils/db");
 const orderRoutes = require("./router/orderRoutes");
 const productRoutes = require("./router/productRoutes");
 const paymentRoutes = require("./router/payment-router");
-const uploadRoute = require("./routes/upload");
+const uploadRoute = require("./router/upload");
 const cors = require("cors");
 
 // dotenv.config();
