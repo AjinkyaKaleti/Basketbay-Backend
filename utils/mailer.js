@@ -1,25 +1,36 @@
-const nodemailer = require("nodemailer");
+const axios = require("axios");
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.zoho.com",
-  port: 465, // SSL port
-  secure: true, // true for SSL (port 465)
-  auth: {
-    user: process.env.MAILER_FROM,
-    pass: process.env.MAILER_APP_PASSWORD, // Zoho app password
-  },
-});
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const MAILER_FROM = process.env.MAILER_FROM;
+
+if (!RESEND_API_KEY) {
+  console.log(
+    `Warning: RESEND_API_KEY ${RESEND_API_KEY} not set. MAILER_FROM ${MAILER_FROM} Emails will not be sent.`
+  );
+}
 
 const sendEmail = async (to, subject, html) => {
   try {
-    await transporter.sendMail({
-      from: process.env.MAILER_FROM,
-      to,
+    const payload = {
+      from: MAILER_FROM,
+      to: [to],
       subject,
       html,
+    };
+
+    const resp = await axios.post("https://api.resend.com/emails", payload, {
+      headers: {
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      timeout: 10000,
     });
-    console.log("Email sent successfully to", to);
-    return true;
+
+    console.log("Resend response status:", resp.status);
+    console.log("Resend response data:", JSON.stringify(resp.data));
+
+    // success if status 2xx
+    return resp.status >= 200 && resp.status < 300;
   } catch (err) {
     console.error("Email sending failed:", err);
     return false;

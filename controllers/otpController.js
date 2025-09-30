@@ -37,22 +37,21 @@ const sendOtp = async (req, res) => {
 
     const html = `<p>Your OTP is <strong>${otp}</strong>. It will expire in 5 minutes.</p>`;
 
-    const emailSent = await sendEmail(
-      email,
-      "Your BasketBay OTP",
-      `<p>Your OTP is <strong>${otp}</strong>. It will expire in 5 minutes.</p>`
-    );
+    const emailSent = await sendEmail(email, "Your BasketBay OTP", html);
     if (!emailSent) {
       return res
         .status(500)
-        .json({ message: "Failed to send OTP. Please try again." });
+        .json({
+          success: false,
+          message: "Failed to send OTP. Please try again.",
+        });
     }
 
     console.log(`Generated OTP for ${email}: ${otp}`);
-    return res.json({ message: `OTP sent to ${email}` });
+    return res.json({ success: true, message: "OTP sent successfully", otp });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Failed to send OTP" });
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 

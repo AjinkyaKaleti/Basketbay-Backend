@@ -55,28 +55,39 @@ const createOrder = async (req, res) => {
       .join("<br/>");
 
     // Send email to customer
+    const html = `
+      <p>Greetings ${customer.firstname},</p>
+      <p>Thank you for your order!</p>
+      <p><strong>Order ID:</strong> ${savedOrder._id}</p>
+      <p><strong>Products:</strong><br/>${productList}</p>
+      <p><strong>Total Amount:</strong> ₹${totalAmount}</p>
+      <p><strong>Payment Method:</strong> ${paymentMethod}</p>
+      <p>Your order will be processed shortly.</p>
+    `;
+
     const emailSent = await sendEmail(
       customer.email,
       `Order Confirmation - ${savedOrder._id}`,
-      `
-    <p>Greetings ${customer.firstname},</p>
-    <p>Thank you for your order!</p>
-    <p><strong>Order ID:</strong> ${savedOrder._id}</p>
-    <p><strong>Products:</strong><br/>${productList}</p>
-    <p><strong>Total Amount:</strong> ₹${totalAmount}</p>
-    <p><strong>Payment Method:</strong> ${paymentMethod}</p>
-    <p>Your order will be processed shortly.</p>
-  `
+      html
     );
+    if (!emailSent) {
+      console.warn("Warning: Order confirmation email failed to send");
 
-    if (!emailSent) console.warn("Order confirmation email failed to send");
+      // still return success for order creation, but let frontend know email failed
+      return res.status(201).json({
+        message: "Order placed, but failed to send email.",
+        order: savedOrder,
+      });
+    }
 
-    res
-      .status(201)
-      .json({ message: "Order placed! Check your email.", order: savedOrder });
+    res.status(201).json({
+      success: true,
+      message: "Order placed! Check your email.",
+      order: savedOrder,
+    });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
