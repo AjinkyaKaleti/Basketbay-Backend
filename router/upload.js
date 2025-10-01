@@ -17,6 +17,8 @@ const parser = multer({ storage });
 
 // Upload endpoint
 router.post("/image", parser.single("image"), (req, res) => {
+  console.log("Upload route hit!");
+  console.log("req.file:", req.file);
   try {
     if (!req.file) {
       console.error("Multer did not receive a file!");
