@@ -8,7 +8,7 @@ const cloudinary = require("../config/cloudinaryConfig");
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: "basketbay", // folder in Cloudinary
+    folder: "basketbay/products", // folder in Cloudinary
     allowed_formats: ["jpg", "png", "jpeg"],
   },
 });
