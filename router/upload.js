@@ -18,6 +18,10 @@ const parser = multer({ storage });
 // Upload endpoint
 router.post("/image", parser.single("image"), (req, res) => {
   try {
+    if (!req.file) {
+      console.error("Multer did not receive a file!");
+      return res.status(400).json({ error: "No file uploaded" });
+    }
     res.json({
       message: "Image uploaded successfully",
       url: req.file.path, // Cloudinary URL
