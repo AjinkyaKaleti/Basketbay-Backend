@@ -111,7 +111,7 @@ router.put("/increase/:id", async (req, res) => {
 router.patch("/decrease/:id", async (req, res) => {
   try {
     const product = await Product.findOneAndUpdate(
-      { _id: req.params.id, count: { $gt: 0 } }, // condition check
+      { uid: req.params.id, count: { $gt: 0 } }, // condition check
       { $inc: { count: -1 } },
       { new: true }
     );

@@ -27,7 +27,7 @@ router.post("/image", parser.single("image"), (req, res) => {
       url: req.file.path, // Cloudinary URL
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err });
   }
 });
 
