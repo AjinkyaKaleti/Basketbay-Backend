@@ -79,7 +79,7 @@ router.post("/", async (req, res) => {
 
     res.status(201).json({ product: out, message: "Product added!" });
   } catch (err) {
-    console.error(err);
+    console.error("Product POST error:", err);
     res
       .status(500)
       .json({ message: "Failed to create product", error: err.message });
