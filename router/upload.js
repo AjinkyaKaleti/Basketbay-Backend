@@ -20,7 +20,7 @@ router.post("/image", parser.single("image"), (req, res) => {
   try {
     res.json({
       message: "Image uploaded successfully",
-      url: req.file.path, // Cloudinary URL
+      imageUrl: req.file.path, // Cloudinary URL
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -28,3 +28,5 @@ router.post("/image", parser.single("image"), (req, res) => {
 });
 
 module.exports = router;
+
+
