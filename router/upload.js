@@ -1,35 +1,37 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("../config/cloudinaryConfig");
 
-// Configure storage
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: "basketbay/products", // folder in Cloudinary
-    allowed_formats: ["jpg", "png", "jpeg"],
-  },
-});
+// Use memory storage to avoid disk writes
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
-const parser = multer({ storage });
-
-// Upload endpoint
-router.post("/image", parser.single("image"), (req, res) => {
-  console.log("Upload route hit!");
-  console.log("req.file:", req.file);
+router.post("/image", upload.single("image"), async (req, res) => {
   try {
     if (!req.file) {
-      console.error("Multer did not receive a file!");
       return res.status(400).json({ error: "No file uploaded" });
     }
-    res.json({
-      message: "Image uploaded successfully",
-      url: req.file.path, // Cloudinary URL
-    });
+
+    console.log("Uploading image to Cloudinary:", req.file.originalname);
+
+    cloudinary.uploader
+      .upload_stream({ folder: "basketbay/products" }, (error, result) => {
+        if (error) {
+          console.error("Cloudinary upload error:", error);
+          return res.status(500).json({ error: error.message });
+        }
+
+        console.log("Uploaded successfully:", result.secure_url);
+        res.json({
+          url: result.secure_url,
+          message: "Image uploaded successfully",
+        });
+      })
+      .end(req.file.buffer);
   } catch (err) {
-    res.status(500).json({ error: err });
+    console.error("Upload route error:", err);
+    res.status(500).json({ error: err.message });
   }
 });
 
