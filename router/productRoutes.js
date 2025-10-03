@@ -9,13 +9,20 @@ router.get("/", async (req, res) => {
     const page = parseInt(req.query.page) || 1; // default page 1
     const limit = parseInt(req.query.limit) || 6; // default 6 per page
     const skip = (page - 1) * limit;
+    const sortBy = req.query.sort || "latest";
 
     // total number of documents
     const total = await Product.countDocuments();
 
+    //sort products low-high-latest
+    let sortQuery = {};
+    if (sortBy === "low-high") sortQuery = { price: 1 };
+    else if (sortBy === "high-low") sortQuery = { price: -1 };
+    else if (sortBy === "latest") sortQuery = { createdAt: -1 };
+
     // fetch with pagination, sorted by newest
     const products = await Product.find()
-      .sort({ createdAt: -1 })
+      .sort(sortQuery)
       .skip(skip)
       .limit(limit);
 

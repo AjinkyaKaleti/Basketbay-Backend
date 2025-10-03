@@ -13,7 +13,7 @@ router.post("/image", upload.single("image"), async (req, res) => {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    console.log("Uploading image to Cloudinary:", req.file.originalname);
+    //console.log("Uploading image to Cloudinary:", req.file.originalname);
 
     cloudinary.uploader
       .upload_stream({ folder: "basketbay/products" }, (error, result) => {
@@ -22,7 +22,7 @@ router.post("/image", upload.single("image"), async (req, res) => {
           return res.status(500).json({ error: error.message });
         }
 
-        console.log("Uploaded successfully:", result.secure_url);
+        //console.log("Uploaded successfully:", result.secure_url);
         res.json({
           url: result.secure_url,
           message: "Image uploaded successfully",
