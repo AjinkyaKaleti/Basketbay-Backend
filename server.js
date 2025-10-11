@@ -13,10 +13,10 @@ const cors = require("cors");
 // dotenv.config();
 const app = express();
 
-// Allow frontend (Netlify) to call your backend
+// Allow frontend (hostinger domain) to call your backend
 app.use(
   cors({
-    origin: ["https://basketbay.netlify.app"],
+    origin: ["https://basketbay.in", "https://www.basketbay.in"],
     credentials: true,
   })
 );
