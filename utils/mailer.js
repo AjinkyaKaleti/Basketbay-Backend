@@ -3,6 +3,10 @@ const axios = require("axios");
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const MAILER_FROM = process.env.MAILER_FROM;
 
+console.log(
+  `RESEND_API_KEY: ${RESEND_API_KEY} and MAILER_FROM: ${MAILER_FROM}`
+);
+
 if (!RESEND_API_KEY) {
   console.log(
     `Warning: RESEND_API_KEY ${RESEND_API_KEY} not set. MAILER_FROM ${MAILER_FROM} Emails will not be sent.`
