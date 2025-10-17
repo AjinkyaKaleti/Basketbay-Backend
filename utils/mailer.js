@@ -1,31 +1,32 @@
-const axios = require("axios");
+const nodemailer = require("nodemailer");
 
-const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const ZOHO_PASS = process.env.ZOHO_PASS;
+
+const transporter = nodemailer.createTransport({
+  host: "smtp.zeptomail.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: "emailapikey",
+    pass: ZOHO_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false,
+  },
+});
 
 const sendEmail = async (to, subject, html) => {
   try {
-    const response = await axios.post(
-      "https://api.brevo.com/v3/smtp/email",
-      {
-        sender: { email: "noreply@basketbay.in", name: "BasketBay" },
-        to: [{ email: to }],
-        subject: subject,
-        htmlContent: html,
-      },
-      {
-        headers: {
-          "api-key": BREVO_API_KEY,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    console.log("Email sent successfully:", response.data);
+    await transporter.sendMail({
+      from: '"BasketBay" <noreply@basketbay.in>',
+      to,
+      subject,
+      html,
+    });
+    console.log("Email sent successfully");
     return true;
   } catch (err) {
-    console.error(
-      "Error sending email via Brevo API:",
-      err.response?.data || err
-    );
+    console.error("Error sending email:", err);
     return false;
   }
 };
