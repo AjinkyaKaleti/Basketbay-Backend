@@ -3,7 +3,7 @@ require("dotenv").config();
 
 const ZEPTO_URL = "https://api.zeptomail.in/v1.1/email";
 const ZEPTO_TOKEN =
-  "Zoho-enczapikey wSsVR611/xShWKx+mGeoI+htzAtQAVn2FkR02lKpvn/5G6rEocc7wk3LBQWlHPAXETI4HDIbrbstnB0DgDIH2Yt5mV8EDSiF9mqRe1U4J3x17qnvhDzDV21YlRSIKIoBxAlqk2lnG8sl+g==";
+  "wSsVR611/xShWKx+mGeoI+htzAtQAVn2FkR02lKpvn/5G6rEocc7wk3LBQWlHPAXETI4HDIbrbstnB0DgDIH2Yt5mV8EDSiF9mqRe1U4J3x17qnvhDzDV21YlRSIKIoBxAlqk2lnG8sl+g==";
 const MAILER_FROM = "noreply@basketbay.in";
 
 const client = new SendMailClient({ url: ZEPTO_URL, token: ZEPTO_TOKEN });
