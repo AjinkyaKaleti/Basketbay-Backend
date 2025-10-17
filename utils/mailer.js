@@ -1,32 +1,51 @@
-const nodemailer = require("nodemailer");
+const axios = require("axios");
 
-const transporter = nodemailer.createTransport({
-  host: process.env.MAILER_HOST,
-  port: Number(process.env.MAILER_PORT),
-  secure: false, // false for port 587 (STARTTLS)
-  auth: {
-    user: process.env.MAILER_USER,
-    pass: process.env.MAILER_PASS,
-  },
-});
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const MAILER_FROM = process.env.MAILER_FROM;
 
-transporter.verify((err, success) => {
-  if (err) console.error("SMTP connection failed:", err);
-  else console.log("SMTP server is ready to send emails");
-});
+if (!BREVO_API_KEY) {
+  console.warn(
+    `BREVO_API_KEY not set. Emails from ${MAILER_FROM} will not be sent.`
+  );
+}
+
+// Helper to extract name & email from MAILER_FROM
+const parseFrom = (from) => {
+  const match = from.match(/<(.+)>/);
+  const email = match ? match[1] : from;
+  const name = from.split("<")[0].trim() || "";
+  return { email, name };
+};
 
 const sendEmail = async (to, subject, html) => {
   try {
-    const info = await transporter.sendMail({
-      from: process.env.MAILER_FROM,
-      to,
+    const { email, name } = parseFrom(MAILER_FROM);
+    const payload = {
+      sender: { email, name },
+      to: [{ email: to }],
       subject,
-      html,
-    });
-    console.log("Email sent:", info.messageId);
-    return true;
+      htmlContent: html,
+    };
+
+    const resp = await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      payload,
+      {
+        headers: {
+          "api-key": BREVO_API_KEY,
+          "Content-Type": "application/json",
+        },
+        timeout: 10000,
+      }
+    );
+
+    console.log("Resend response status:", resp.status);
+    console.log("Resend response data:", JSON.stringify(resp.data));
+
+    // success if status 2xx
+    return resp.status >= 200 && resp.status < 300;
   } catch (err) {
-    console.error("Email sending failed:", err.message);
+    console.error("Email sending failed:", err);
     return false;
   }
 };
