@@ -1,50 +1,51 @@
-const nodemailer = require("nodemailer");
-require("dotenv").config();
+const axios = require("axios");
 
-const MAILER_HOST = process.env.MAILER_HOST;
-const MAILER_PORT = process.env.MAILER_PORT;
-const MAILER_USER = process.env.MAILER_USER;
-const MAILER_PASS = process.env.MAILER_PASS;
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const MAILER_FROM = process.env.MAILER_FROM;
 
-if (!MAILER_USER || !MAILER_PASS) {
-  console.warn("Mail credentials are not set in .env file");
+if (!BREVO_API_KEY) {
+  console.warn(
+    `BREVO_API_KEY not set. Emails from ${MAILER_FROM} will not be sent.`
+  );
 }
 
-// Create a reusable transporter object
-const transporter = nodemailer.createTransport({
-  host: MAILER_HOST,
-  port: Number(MAILER_PORT),
-  secure: true, // true for port 465 (SSL)
-  auth: {
-    user: MAILER_USER,
-    pass: MAILER_PASS,
-  },
-});
-
-// Verify connection once when the server starts
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("SMTP connection failed:", error);
-  } else {
-    console.log("SMTP server is ready to send emails");
-  }
-});
+// Helper to extract name & email from MAILER_FROM
+const parseFrom = (from) => {
+  const match = from.match(/<(.+)>/);
+  const email = match ? match[1] : from;
+  const name = from.split("<")[0].trim() || "";
+  return { email, name };
+};
 
 const sendEmail = async (to, subject, html) => {
   try {
+    const { email, name } = parseFrom(MAILER_FROM);
     const payload = {
-      from: MAILER_FROM,
-      to,
+      sender: { email, name },
+      to: [{ email: to }],
       subject,
-      html,
+      htmlContent: html,
     };
 
-    const info = await transporter.sendMail(payload);
-    console.log("Email sent to:", info.messageId);
-    return true;
+    const resp = await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      payload,
+      {
+        headers: {
+          "api-key": BREVO_API_KEY,
+          "Content-Type": "application/json",
+        },
+        timeout: 10000,
+      }
+    );
+
+    console.log("Resend response status:", resp.status);
+    console.log("Resend response data:", JSON.stringify(resp.data));
+
+    // success if status 2xx
+    return resp.status >= 200 && resp.status < 300;
   } catch (err) {
-    console.error("Email sending failed:", err.message);
+    console.error("Email sending failed:", err);
     return false;
   }
 };
