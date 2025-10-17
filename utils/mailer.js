@@ -1,51 +1,30 @@
-const axios = require("axios");
+const nodemailer = require("nodemailer");
 
-const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const BREVO_SMTP = process.env.BREVO_SMTP;
 const MAILER_FROM = process.env.MAILER_FROM;
 
-if (!BREVO_API_KEY) {
-  console.warn(
-    `BREVO_API_KEY not set. Emails from ${MAILER_FROM} will not be sent.`
-  );
-}
-
-// Helper to extract name & email from MAILER_FROM
-const parseFrom = (from) => {
-  const match = from.match(/<(.+)>/);
-  const email = match ? match[1] : from;
-  const name = from.split("<")[0].trim() || "";
-  return { email, name };
-};
+const transporter = nodemailer.createTransport({
+  host: "smtp.brevo.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: MAILER_FROM,
+    pass: BREVO_SMTP,
+  },
+});
 
 const sendEmail = async (to, subject, html) => {
   try {
-    const { email, name } = parseFrom(MAILER_FROM);
-    const payload = {
-      sender: { email, name },
-      to: [{ email: to }],
+    await transporter.sendMail({
+      from: '"BasketBay" <noreply@basketbay.in>',
+      to,
       subject,
-      htmlContent: html,
-    };
-
-    const resp = await axios.post(
-      "https://api.brevo.com/v3/smtp/email",
-      payload,
-      {
-        headers: {
-          "api-key": BREVO_API_KEY,
-          "Content-Type": "application/json",
-        },
-        timeout: 10000,
-      }
-    );
-
-    console.log("Resend response status:", resp.status);
-    console.log("Resend response data:", JSON.stringify(resp.data));
-
-    // success if status 2xx
-    return resp.status >= 200 && resp.status < 300;
+      html,
+    });
+    console.log("Email sent successfully");
+    return true;
   } catch (err) {
-    console.error("Email sending failed:", err);
+    console.error("Error sending email:", err);
     return false;
   }
 };
