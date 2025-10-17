@@ -18,7 +18,7 @@ const sendEmail = async (to, subject, html) => {
         {
           email_address: {
             address: to,
-            name: to.split("@")[0], // just the username
+            name: to.split("@")[0],
           },
         },
       ],
@@ -27,9 +27,12 @@ const sendEmail = async (to, subject, html) => {
     });
 
     console.log("Email sent successfully to: ", to);
+    console.log("ZeptoMail Response:", response);
     return true;
   } catch (err) {
-    console.error("Error sending email:", err.response?.data || err.message);
+    console.error("Error message:", err.message);
+    console.error("Full error object:", JSON.stringify(err, null, 2));
+    console.error("Response data:", err?.response?.data);
     return false;
   }
 };
