@@ -1,27 +1,32 @@
-const axios = require("axios");
+const { SendMailClient } = require("zeptomail");
+require("dotenv").config();
 
-const ZEPTO_API_KEY = process.env.ZEPTO_API_KEY;
+const url = process.env.ZEPTO_URL;
+const token = process.env.ZEPTO_TOKEN;
 const MAILER_FROM = process.env.MAILER_FROM;
+
+const client = new SendMailClient({ url, token });
 
 const sendEmail = async (to, subject, html) => {
   try {
-    const response = await axios.post(
-      "https://api.zeptomail.in/v1.1/email",
-      {
-        from: { address: MAILER_FROM, name: "BasketBay" },
-        to: [{ email_address: { address: to } }],
-        subject,
-        htmlbody: html,
+    await client.sendMail({
+      from: {
+        address: MAILER_FROM,
+        name: "BasketBay",
       },
-      {
-        headers: {
-          Authorization: `Zoho-enczapikey ${ZEPTO_API_KEY}`,
-          "Content-Type": "application/json",
+      to: [
+        {
+          email_address: {
+            address: to,
+            name: to.split("@")[0], // just the username
+          },
         },
-      }
-    );
+      ],
+      subject,
+      htmlbody: html,
+    });
 
-    console.log("Email sent successfully:", response.data);
+    console.log("Email sent successfully to: ", to);
     return true;
   } catch (err) {
     console.error("Error sending email:", err.response?.data || err.message);
