@@ -11,17 +11,25 @@ const isValidEmail = (email) => {
 //------------Send Otp-----------------
 const sendOtp = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, mode } = req.body;
 
     if (!email) return res.status(400).json({ message: "Email is required" });
 
     if (!isValidEmail(email)) {
       return res.status(400).json({ message: "Invalid email format" });
     }
+    let user = await User.findOne({ email });
 
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (mode === "login" && !user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
+    if (mode === "signup" && !user) {
+      // create temporary user entry for OTP
+      user = new User({ email });
+    }
+
+    //Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiry
 
@@ -33,22 +41,18 @@ const sendOtp = async (req, res) => {
     user.otpExpiry = expiry; // Now using the defined variable
     await user.save();
 
-    console.log(`Generated OTP for ${email}: ${otp}`);
-
     const html = `<p>Your OTP is <strong>${otp}</strong>. It will expire in 5 minutes.</p>`;
 
     const emailSent = await sendEmail(email, "Your BasketBay OTP", html);
     if (!emailSent) {
-      return res
-        .status(500)
-        .json({
-          success: false,
-          message: "Failed to send OTP. Please try again.",
-        });
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send OTP. Please try again.",
+      });
     }
 
     console.log(`Generated OTP for ${email}: ${otp}`);
-    return res.json({ success: true, message: "OTP sent successfully", otp });
+    return res.json({ success: true, message: "OTP sent successfully" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: "Internal server error" });
@@ -58,6 +62,10 @@ const sendOtp = async (req, res) => {
 //------------Verify Otp-----------------
 
 const verifyOtp = async (req, res) => {
+  if (otp.length !== 6) {
+    setToast({ show: true, message: "Enter 6-digit OTP", type: "error" });
+    return;
+  }
   try {
     const { email, otp } = req.body;
 
