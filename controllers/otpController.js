@@ -20,13 +20,9 @@ const sendOtp = async (req, res) => {
     }
     let user = await User.findOne({ email });
 
+    // Only check user existence for login
     if (mode === "login" && !user) {
       return res.status(404).json({ message: "User not found" });
-    }
-
-    if (mode === "signup" && !user) {
-      // create temporary user entry for OTP
-      user = new User({ email });
     }
 
     //Generate OTP
@@ -36,11 +32,14 @@ const sendOtp = async (req, res) => {
     otpStore[email] = { otp, expiresAt: expiry.getTime() };
     setTimeout(() => delete otpStore[email], 5 * 60 * 1000);
 
-    // Save OTP & expiry in database
-    user.otp = otp;
-    user.otpExpiry = expiry; // Now using the defined variable
-    await user.save();
+    // Save OTP & expiry only if user exists (login case)
+    if (user) {
+      user.otp = otp;
+      user.otpExpiry = expiry;
+      await user.save();
+    }
 
+    // Send OTP email
     const html = `<p>Your OTP is <strong>${otp}</strong>. It will expire in 5 minutes.</p>`;
 
     const emailSent = await sendEmail(email, "Your BasketBay OTP", html);
