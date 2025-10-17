@@ -9,7 +9,7 @@ const MAILER_HOST = process.env.MAILER_HOST;
 const transporter = nodemailer.createTransport({
   host: MAILER_HOST,
   port: MAILER_PORT,
-  secure: false,
+  secure: true,
   auth: {
     user: MAILER_FROM,
     pass: BREVO_SMTP,
