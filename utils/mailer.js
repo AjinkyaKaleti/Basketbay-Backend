@@ -1,16 +1,15 @@
 const { SendMailClient } = require("zeptomail");
 require("dotenv").config();
 
-const ZEPTO_URL = "https://api.zeptomail.in/v1.1/email";
-const ZEPTO_TOKEN =
-  "Zoho-enczapikey wSsVR60lr0b0X617zmf7Ielqyw5UUVn3E0952lH0vyT5GvDL8sc/xE3JDVD2SKIYFzE6FzoSrbssy00AgDQKi4klmQ0HXCiF9mqRe1U4J3x17qnvhDzKWWxZlRSJLIwNwA5inmloEM0j+g==";
-const MAILER_FROM = "noreply@basketbay.in";
+const url = process.env.ZEPTO_URL;
+const token = process.env.ZEPTO_TOKEN;
+const MAILER_FROM = process.env.MAILER_FROM;
 
-const client = new SendMailClient({ url: ZEPTO_URL, token: ZEPTO_TOKEN });
+const client = new SendMailClient({ url, token });
 
 const sendEmail = async (to, subject, html) => {
   try {
-    const response = await client.sendMail({
+    await client.sendMail({
       from: {
         address: MAILER_FROM,
         name: "BasketBay",
@@ -27,7 +26,7 @@ const sendEmail = async (to, subject, html) => {
       htmlbody: html,
     });
 
-    console.log("Email sent successfully to:", to);
+    console.log("Email sent successfully to: ", to);
     console.log("ZeptoMail Response:", response);
     return true;
   } catch (err) {
