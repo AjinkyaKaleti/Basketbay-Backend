@@ -62,55 +62,79 @@ const sendOtp = async (req, res) => {
 
 const verifyOtp = async (req, res) => {
   try {
-    const { email, otp } = req.body;
+    const { email, otp, mode } = req.body;
 
-    if (!email || !otp) {
+    if (!email || !otp || !mode) {
       return res
         .status(400)
         .json({ success: false, message: "Email and OTP required" });
     }
 
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+    if (mode === "signup") {
+      const record = otpStore[email];
+      if (!record) {
+        return res
+          .status(400)
+          .json({ success: false, message: "OTP not found" });
+      }
+      if (record.otp !== otp) {
+        return res.status(400).json({ success: false, message: "Invalid OTP" });
+      }
+      if (record.expiresAt < Date.now()) {
+        delete otpStore[email];
+        return res.status(400).json({ success: false, message: "OTP expired" });
+      }
+
+      // OTP verified for signup — remove from store
+      delete otpStore[email];
+
+      return res.status(200).json({
+        success: true,
+        message: "OTP verified for signup",
+      });
     }
 
-    // Check OTP match
-    if (user.otp !== otp) {
-      return res.status(400).json({ success: false, message: "Invalid OTP" });
+    if (mode === "login") {
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
+      }
+      if (user.otp !== otp) {
+        return res.status(400).json({ success: false, message: "Invalid OTP" });
+      }
+      if (user.otpExpiry < new Date()) {
+        return res.status(400).json({ success: false, message: "OTP expired" });
+      }
+
+      // OTP is valid — mark as verified
+      user.isOtpVerified = true;
+      user.otp = undefined;
+      user.otpExpiry = undefined;
+      await user.save();
+
+      // Create JWT token
+      const token = jwt.sign(
+        { id: user._id, email: user.email },
+        process.env.JWT_SECRET_KEY,
+        { expiresIn: "7d" }
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: "OTP verified & user logged in",
+        token,
+        user: {
+          id: user._id,
+          email: user.email,
+          firstName: user.firstname,
+          lastName: user.lastname,
+        },
+      });
     }
 
-    // Check expiry
-    if (user.otpExpiry < new Date()) {
-      return res.status(400).json({ success: false, message: "OTP expired" });
-    }
-
-    // OTP is valid — mark as verified
-    user.isOtpVerified = true;
-    user.otp = undefined; // clear OTP
-    user.otpExpiry = undefined;
-    await user.save();
-
-    // Create JWT token
-    const token = jwt.sign(
-      { id: user._id, email: user.email },
-      process.env.JWT_SECRET_KEY,
-      { expiresIn: "7d" }
-    );
-
-    return res.status(200).json({
-      success: true,
-      message: "OTP verified & user logged in",
-      token,
-      user: {
-        id: user._id,
-        email: user.email,
-        firstName: user.firstname,
-        lastName: user.lastname,
-      },
-    });
+    return res.status(400).json({ success: false, message: "Invalid mode" });
   } catch (err) {
     console.error("OTP Verification Error:", err);
     return res
