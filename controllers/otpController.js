@@ -61,10 +61,6 @@ const sendOtp = async (req, res) => {
 //------------Verify Otp-----------------
 
 const verifyOtp = async (req, res) => {
-  if (otp.length !== 6) {
-    setToast({ show: true, message: "Enter 6-digit OTP", type: "error" });
-    return;
-  }
   try {
     const { email, otp } = req.body;
 
