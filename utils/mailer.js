@@ -1,12 +1,13 @@
 const { SendMailClient } = require("zeptomail");
 require("dotenv").config();
 
-const ZEPTO_TOKEN = process.env.ZEPTO_TOKEN;
-const MAILER_FROM = process.env.MAILER_FROM;
+const url = "api.zeptomail.com/";
+const token =
+  "Zoho-enczapikey wSsVR60k+UOiWqsrymb7dOdtzVpQAg6nFkp1ilPy6SetH6zF/cdtkxLNAA6kSaRJGGFvQWZBo7shy0pThzpf29stzgtUWyiF9mqRe1U4J3x17qnvhDzNW2pYlRWMLIILwA5skmVhE8ol+g==";
 
 const client = new SendMailClient({
-  url: "https://api.zeptomail.in/v1.1/email",
-  token: `Zoho-enczapikey ${ZEPTO_TOKEN}`,
+  url,
+  token,
 });
 
 const sendEmail = async (to, subject, html) => {
