@@ -9,6 +9,7 @@ const client = new SendMailClient({
   url,
   token,
 });
+const MAILER_FROM = process.env.MAILER_FROM;
 
 const sendEmail = async (to, subject, html) => {
   try {
