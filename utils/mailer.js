@@ -1,35 +1,25 @@
-// backend/utils/sendEmail.js
-const nodemailer = require("nodemailer");
+const { SendMailClient } = require("zeptomail");
 require("dotenv").config();
 
-const ZEPTO_PASS = process.env.ZEPTO_PASS;
-const ZEPTO_USER = process.env.ZEPTO_USER;
-const ZEPTO_PORT = process.env.ZEPTO_PORT;
-const ZEPTO_HOST = process.env.ZEPTO_HOST;
-
-const transport = nodemailer.createTransport({
-  host: ZEPTO_HOST,
-  port: ZEPTO_PORT,
-  secure: false,
-  auth: {
-    user: ZEPTO_USER,
-    pass: ZEPTO_PASS,
-  },
-});
-
+const ZEPTO_TOKEN = process.env.ZEPTO_TOKEN;
 const MAILER_FROM = process.env.MAILER_FROM;
+
+const client = new SendMailClient({
+  url: "https://api.zeptomail.in/v1.1/email",
+  token: `Zoho-enczapikey ${ZEPTO_TOKEN}`,
+});
 
 const sendEmail = async (to, subject, html) => {
   try {
-    const mailOptions = {
-      from: `"BasketBay" <${MAILER_FROM}>`,
-      to,
+    const response = await client.sendMail({
+      from: { address: MAILER_FROM, name: "BasketBay" },
+      to: [{ email_address: { address: to, name: to.split("@")[0] } }],
       subject,
-      html,
-    };
+      htmlbody: html,
+    });
 
-    const info = await transport.sendMail(mailOptions);
-    console.log("Email sent successfully:", info.response);
+    console.log("Email sent successfully to: ", to);
+    console.log("Response:", response);
     return true;
   } catch (err) {
     console.error("Error sending email:", err);
