@@ -1,121 +1,109 @@
-const { Cashfree } = require("@cashfreepayments/cashfree-sdk");
-const crypto = require("crypto");
+// /app/controllers/payment-controller.js
 const Order = require("../models/user-order-modal");
-const Product = require("../models/admin-product-modal");
-require("dotenv").config();
+const User = require("../models/user-modal");
+const cashfree = require("@cashfreepayments/cashfree-sdk");
 
-// Initialize Cashfree client
-const cashfree = Cashfree({
-  clientId: process.env.CASHFREE_APP_ID,
-  clientSecret: process.env.CASHFREE_SECRET_KEY,
-  environment: "production", // or "TEST" for sandbox
-});
-
-// POST: create payment link and pending order
+// Create Payment Link & Pending Order
 const createPaymentLink = async (req, res) => {
   try {
-    const {
-      customerId,
-      products,
-      totalAmount,
-      customerName,
-      customerEmail,
-      customerPhone,
-    } = req.body;
+    const { customerId, products, totalAmount } = req.body;
 
-    if (!customerId || !products || products.length === 0 || !totalAmount) {
-      return res.status(400).json({ message: "Invalid request" });
+    if (!customerId || !products || products.length === 0) {
+      return res.status(400).json({ message: "Invalid order data" });
     }
 
-    // Generate unique order ID for Cashfree
+    const customer = await User.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+
+    // Generate unique order ID (you can also use MongoDB _id)
     const orderId = `ORDER_${Date.now()}`;
 
-    // Step 1: Save pending order in DB
+    // Use cashfree.orders.create() directly
+    const paymentResponse = await cashfree.orders.create({
+      clientId: process.env.CASHFREE_CLIENT_ID,
+      clientSecret: process.env.CASHFREE_CLIENT_SECRET,
+      environment: "PROD",
+      orderId: orderId,
+      orderAmount: totalAmount.toString(),
+      orderCurrency: "INR",
+      customerDetails: {
+        customerId: customer._id.toString(),
+        customerName: `${customer.firstname} ${customer.lastname}`,
+        customerEmail: customer.email,
+        customerPhone: customer.mobileno,
+      },
+      orderMeta: {
+        returnUrl: "https://basketbay.in/payment-status",
+      },
+    });
+
+    const paymentLink = paymentResponse.paymentLink;
+
+    // Save pending order in your DB
     const pendingOrder = new Order({
       customer: customerId,
-      products,
+      products: products.map((p) => ({
+        productId: p.productId,
+        name: p.name,
+        price: p.price,
+        quantity: p.quantity,
+        discount: p.discount || 0,
+      })),
       totalAmount,
       paymentMethod: "online",
-      status: "PENDING",
       paymentDetails: {
         cashfree_order_id: orderId,
+        payment_link: paymentLink,
         payment_status: "PENDING",
       },
+      status: "PENDING",
     });
 
     const savedOrder = await pendingOrder.save();
 
-    // Step 2: Create Cashfree payment link
-    const paymentResponse = await cashfree.payments.createLink({
-      orderId,
-      orderAmount: totalAmount,
-      orderCurrency: "INR",
-      customerDetails: {
-        customerName,
-        customerEmail,
-        customerPhone,
-      },
-      orderNote: "BasketBay Order Payment",
-    });
-
-    // Step 3: Save payment link in DB
-    savedOrder.paymentDetails.payment_link = paymentResponse.paymentLink;
-    await savedOrder.save();
-
-    res.status(200).json({
-      paymentLink: paymentResponse.paymentLink,
-      cashfree_order_id: orderId,
+    res.status(201).json({
+      success: true,
+      message: "Payment link created, order is pending.",
+      paymentLink,
       orderId: savedOrder._id,
     });
   } catch (err) {
-    console.error("Cashfree create link error:", err);
-    res.status(500).json({ message: "Failed to create payment link" });
+    console.error("Payment link creation error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-// POST: Cashfree webhook
-const cashfreeWebhook = async (req, res) => {
+// Optional: Webhook endpoint to update order status
+const handleCashfreeWebhook = async (req, res) => {
   try {
-    const signature = req.headers["x-webhook-signature"];
-    const secret = process.env.CASHFREE_WEBHOOK_SECRET;
-    const payload = JSON.stringify(req.body);
+    const { orderId, orderAmount, orderStatus, referenceId } = req.body;
 
-    const hash = crypto
-      .createHmac("sha256", secret)
-      .update(payload)
-      .digest("hex");
-    if (hash !== signature)
-      return res.status(400).json({ message: "Invalid signature" });
-
-    const { order_id, order_status, reference_id, order_amount } = req.body;
-
-    // Find the pending order
+    // Find order by cashfree_order_id
     const order = await Order.findOne({
-      "paymentDetails.cashfree_order_id": order_id,
+      "paymentDetails.cashfree_order_id": orderId,
     });
-    if (!order) return res.status(404).json({ message: "Order not found" });
-
-    if (order_status === "PAID") {
-      order.status = "Paid";
-      order.paymentDetails.payment_status = "SUCCESS";
-      order.paymentDetails.cashfree_payment_time = new Date();
-      order.paymentDetails.cashfree_reference_id = reference_id;
-
-      // Reduce product stock
-      for (let item of order.products) {
-        await Product.findByIdAndUpdate(item.productId, {
-          $inc: { count: -item.quantity },
-        });
-      }
-
-      await order.save();
+    if (!order) {
+      return res.status(404).send("Order not found");
     }
 
-    res.status(200).json({ message: "Webhook processed" });
+    // Update order status
+    order.status = orderStatus === "PAID" ? "Paid" : orderStatus;
+    order.paymentDetails.payment_status =
+      orderStatus === "PAID" ? "SUCCESS" : orderStatus;
+    order.paymentDetails.payment_reference_id = referenceId;
+
+    await order.save();
+
+    res.status(200).send("OK");
   } catch (err) {
     console.error("Webhook error:", err);
-    res.status(500).json({ message: "Webhook failed" });
+    res.status(500).send("Server error");
   }
 };
 
-module.exports = { createPaymentLink, cashfreeWebhook };
+module.exports = {
+  createPaymentLink,
+  handleCashfreeWebhook,
+};
