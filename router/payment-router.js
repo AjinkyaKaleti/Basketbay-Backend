@@ -1,11 +1,11 @@
 const express = require("express");
 const {
-  paymentGateway,
+  createPaymentLink,
   cashfreeWebhook,
 } = require("../controllers/payment-controller");
 const router = express.Router();
 
-router.post("/payment-gateway", paymentGateway);
-router.post("/webhook", cashfreeWebhook); // webhook endpoint
+router.post("/create-link", createPaymentLink);
+router.post("/webhook", cashfreeWebhook);
 
 module.exports = router;
