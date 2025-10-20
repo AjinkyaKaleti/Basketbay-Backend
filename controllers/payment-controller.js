@@ -1,14 +1,14 @@
-const { payments } = require("@cashfreepayments/cashfree-sdk");
+const { Cashfree } = require("@cashfreepayments/cashfree-sdk");
 const crypto = require("crypto");
 const Order = require("../models/user-order-modal");
 const Product = require("../models/admin-product-modal");
 require("dotenv").config();
 
 // Initialize Cashfree client
-const cashfree = payments({
+const cashfree = Cashfree({
   clientId: process.env.CASHFREE_APP_ID,
   clientSecret: process.env.CASHFREE_SECRET_KEY,
-  environment: "PROD", // or "TEST" for sandbox
+  environment: "production", // or "TEST" for sandbox
 });
 
 // POST: create payment link and pending order
