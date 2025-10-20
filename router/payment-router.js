@@ -1,11 +1,11 @@
 const express = require("express");
 const {
   paymentGateway,
-  verifyPayment,
+  cashfreeWebhook,
 } = require("../controllers/payment-controller");
 const router = express.Router();
 
 router.post("/payment-gateway", paymentGateway);
-router.post("/verify-payment", verifyPayment);
+router.post("/webhook", cashfreeWebhook); // webhook endpoint
 
 module.exports = router;

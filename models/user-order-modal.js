@@ -13,9 +13,23 @@ const orderSchema = new mongoose.Schema(
         imageUrl: { type: String },
       },
     ],
-    paymentMethod: String,
+    paymentMethod: { type: String, default: "online" },
     totalAmount: Number,
-    status: { type: String, default: "Completed" },
+    status: {
+      type: String,
+      enum: ["pending", "paid", "failed", "cancelled"],
+      default: "pending",
+    },
+    paymentDetails: {
+      cashfree_order_id: { type: String },
+      payment_link: { type: String },
+      payment_status: {
+        type: String,
+        enum: ["PENDING", "SUCCESS", "FAILED", "CANCELLED"],
+        default: "PENDING",
+      },
+      payment_reference_id: { type: String },
+    },
   },
   { timestamps: true }
 );
