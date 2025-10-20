@@ -14,16 +14,26 @@ const createOrder = async (req, res) => {
     }
 
     // Determine order status
-    let status = "pending";
-    if (paymentMethod === "Razorpay" && paymentDetails?.razorpay_payment_id) {
-      status = "Paid"; // mark paid only if Razorpay payment exists
+    let status = "PENDING";
+    if (
+      paymentMethod === "online" &&
+      paymentDetails?.cashfree_order_id &&
+      paymentDetails?.payment_status === "SUCCESS"
+    ) {
+      status = "Paid";
+      paymentStatus = "SUCCESS";
     }
 
     const newOrder = new Order({
       customer: customerId,
       products,
-      paymentMethod,
-      paymentDetails: paymentDetails || {},
+      paymentMethod: paymentMethod || "online",
+      paymentDetails: {
+        cashfree_order_id: paymentDetails?.cashfree_order_id || null,
+        payment_link: paymentDetails?.payment_link || null,
+        payment_status: paymentStatus,
+        payment_reference_id: paymentDetails?.payment_reference_id || null,
+      },
       totalAmount,
       status,
     });
@@ -62,7 +72,7 @@ const createOrder = async (req, res) => {
       <p><strong>Products:</strong><br/>${productList}</p>
       <p><strong>Total Amount:</strong> ₹${totalAmount}</p>
       <p><strong>Payment Method:</strong> ${paymentMethod}</p>
-      <p>Your order will be processed shortly.</p>
+      <p>We’ll notify you once your payment is confirmed.</p>
     `;
 
     const emailSent = await sendEmail(
