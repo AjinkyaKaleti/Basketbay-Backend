@@ -54,7 +54,7 @@ const createPaymentLink = async (req, res) => {
     }
 
     // Construct the Cashfree hosted payment link
-    const paymentLink = `https://payments.cashfree.com/session/${sessionId}`;
+    const paymentLink = `https://payments.cashfree.com/pg/checkout?payment_session_id=${sessionId}`;
 
     //Save order in DB with pending status
     const pendingOrder = new Order({
