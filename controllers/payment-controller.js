@@ -1,9 +1,8 @@
 // /app/controllers/payment-controller.js
 const Order = require("../models/user-order-modal");
 const User = require("../models/user-modal");
-const cashfree = require("@cashfreepayments/cashfree-sdk");
+const CASHFREE_BASE_URL = "https://api.cashfree.com/pg"; // For PROD
 
-// Create Payment Link & Pending Order
 const createPaymentLink = async (req, res) => {
   try {
     const { customerId, products, totalAmount } = req.body;
@@ -17,31 +16,42 @@ const createPaymentLink = async (req, res) => {
       return res.status(404).json({ message: "Customer not found" });
     }
 
-    // Generate unique order ID (you can also use MongoDB _id)
     const orderId = `ORDER_${Date.now()}`;
 
-    // Use cashfree.orders.create() directly
-    const paymentResponse = await cashfree.orders.create({
-      clientId: process.env.CASHFREE_CLIENT_ID,
-      clientSecret: process.env.CASHFREE_CLIENT_SECRET,
-      environment: "PROD",
-      orderId: orderId,
-      orderAmount: totalAmount.toString(),
-      orderCurrency: "INR",
-      customerDetails: {
-        customerId: customer._id.toString(),
-        customerName: `${customer.firstname} ${customer.lastname}`,
-        customerEmail: customer.email,
-        customerPhone: customer.mobileno,
+    //Create Cashfree order via REST API
+    const response = await axios.post(
+      `${CASHFREE_BASE_URL}/orders`,
+      {
+        order_id: orderId,
+        order_amount: totalAmount,
+        order_currency: "INR",
+        customer_details: {
+          customer_id: customer._id.toString(),
+          customer_name: `${customer.firstname} ${customer.lastname}`,
+          customer_email: customer.email,
+          customer_phone: customer.mobileno,
+        },
+        order_meta: {
+          return_url: "https://basketbay.in/payment-status",
+        },
       },
-      orderMeta: {
-        returnUrl: "https://basketbay.in/payment-status",
-      },
-    });
+      {
+        headers: {
+          "x-client-id": process.env.CASHFREE_CLIENT_ID,
+          "x-client-secret": process.env.CASHFREE_CLIENT_SECRET,
+          "x-api-version": "2022-09-01",
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    const paymentLink = paymentResponse.paymentLink;
+    //Extract payment link from response
+    const paymentLink = response.data?.payment_link || null;
+    if (!paymentLink) {
+      throw new Error("Failed to get payment link from Cashfree");
+    }
 
-    // Save pending order in your DB
+    //Save order in DB with pending status
     const pendingOrder = new Order({
       customer: customerId,
       products: products.map((p) => ({
@@ -65,22 +75,25 @@ const createPaymentLink = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Payment link created, order is pending.",
+      message: "Payment link created successfully.",
       paymentLink,
       orderId: savedOrder._id,
     });
   } catch (err) {
-    console.error("Payment link creation error:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error("Payment link creation error:", err.response?.data || err);
+    res.status(500).json({
+      success: false,
+      message: "Error creating payment link",
+      error: err.response?.data || err.message,
+    });
   }
 };
 
-// Optional: Webhook endpoint to update order status
+//Webhook handler to update order
 const handleCashfreeWebhook = async (req, res) => {
   try {
-    const { orderId, orderAmount, orderStatus, referenceId } = req.body;
+    const { orderId, orderStatus, referenceId } = req.body;
 
-    // Find order by cashfree_order_id
     const order = await Order.findOne({
       "paymentDetails.cashfree_order_id": orderId,
     });
@@ -88,7 +101,6 @@ const handleCashfreeWebhook = async (req, res) => {
       return res.status(404).send("Order not found");
     }
 
-    // Update order status
     order.status = orderStatus === "PAID" ? "Paid" : orderStatus;
     order.paymentDetails.payment_status =
       orderStatus === "PAID" ? "SUCCESS" : orderStatus;
