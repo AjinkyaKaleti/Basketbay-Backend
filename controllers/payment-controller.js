@@ -48,10 +48,13 @@ const createPaymentLink = async (req, res) => {
     console.log("Cashfree response: ", response.data);
 
     //Extract payment link from response
-    const paymentLink = response.data?.payment_link || null;
-    if (!paymentLink) {
-      throw new Error("Failed to get payment link from Cashfree");
+    const sessionId = response.data?.payment_session_id;
+    if (!sessionId) {
+      throw new Error("Failed to get payment session ID from Cashfree");
     }
+
+    // Construct the Cashfree hosted payment link
+    const paymentLink = `https://payments.cashfree.com/session/${sessionId}`;
 
     //Save order in DB with pending status
     const pendingOrder = new Order({
