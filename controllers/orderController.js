@@ -13,8 +13,24 @@ const createOrder = async (req, res) => {
       return res.status(400).json({ message: "Invalid order data" });
     }
 
+    // Check if user has pending order for the same products
+    const existingPending = await Order.findOne({
+      customer: customerId,
+      "products.productId": { $in: products.map((p) => p.productId) },
+      status: "PENDING",
+    });
+
+    if (existingPending) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "You already have a pending order for one or more of these products.",
+      });
+    }
+
     // Determine order status
     let status = "PENDING";
+    let paymentStatus = "PENDING"; // default
     if (
       paymentMethod === "online" &&
       paymentDetails?.cashfree_order_id &&
