@@ -5,9 +5,9 @@ const CASHFREE_BASE_URL = "https://api.cashfree.com/pg"; // For PROD
 
 const createPaymentLink = async (req, res) => {
   try {
-    const { customerId, products, totalAmount } = req.body;
+    const { customerId, orders, totalAmount } = req.body;
 
-    if (!customerId || !products || products.length === 0) {
+    if (!customerId || !orders || orders.length === 0) {
       return res.status(400).json({ message: "Invalid order data" });
     }
 
@@ -59,11 +59,11 @@ const createPaymentLink = async (req, res) => {
     //Save order in DB with pending status
     const pendingOrder = new Order({
       customer: customerId,
-      products: products.map((p) => ({
-        productId: p.productId,
+      products: orders.map((p) => ({
+        productId: p.id || p.productId,
         name: p.name,
         price: p.price,
-        quantity: p.quantity,
+        quantity: p.count || p.quantity,
         discount: p.discount || 0,
       })),
       totalAmount,
@@ -81,8 +81,9 @@ const createPaymentLink = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Payment link created successfully.",
-      paymentLink,
+      payment_session_id: response.data.payment_session_id,
       orderId: savedOrder._id,
+      amount: totalAmount,
     });
   } catch (err) {
     console.error("Payment link creation error:", err.response?.data || err);
