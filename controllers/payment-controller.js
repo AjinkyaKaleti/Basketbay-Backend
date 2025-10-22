@@ -1,4 +1,4 @@
-// /app/controllers/payment-controller.js
+const axios = require("axios");
 const Order = require("../models/user-order-modal");
 const User = require("../models/user-modal");
 const CASHFREE_BASE_URL = "https://api.cashfree.com/pg"; // For PROD
@@ -37,8 +37,8 @@ const createPaymentLink = async (req, res) => {
       },
       {
         headers: {
-          "x-client-id": process.env.CASHFREE_CLIENT_ID,
-          "x-client-secret": process.env.CASHFREE_CLIENT_SECRET,
+          "x-client-id": process.env.CASHFREE_APP_ID,
+          "x-client-secret": process.env.CASHFREE_SECRET_KEY,
           "x-api-version": "2022-09-01",
           "Content-Type": "application/json",
         },
