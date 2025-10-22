@@ -2,6 +2,7 @@ const express = require("express");
 const {
   createPaymentLink,
   handleCashfreeWebhook,
+  verifyPayment,
 } = require("../controllers/payment-controller");
 const router = express.Router();
 
