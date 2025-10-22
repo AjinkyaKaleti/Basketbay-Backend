@@ -29,7 +29,7 @@ const createPaymentLink = async (req, res) => {
           customer_id: customer._id.toString(),
           customer_name: `${customer.firstname} ${customer.lastname}`,
           customer_email: customer.email,
-          customer_phone: customer.mobileno,
+          customer_phone: customer.mobile,
         },
         order_meta: {
           return_url: "https://basketbay.in/payment-status",
