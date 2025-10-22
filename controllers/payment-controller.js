@@ -1,7 +1,8 @@
 const axios = require("axios");
 const Order = require("../models/user-order-modal");
 const User = require("../models/user-modal");
-const CASHFREE_BASE_URL = "https://api.cashfree.com/pg"; // For PROD
+// const CASHFREE_BASE_URL = "https://api.cashfree.com/pg"; // For PROD
+const CASHFREE_BASE_URL = "https://sandbox.cashfree.com/pg"; // For PROD
 
 const createPaymentLink = async (req, res) => {
   try {
