@@ -45,6 +45,8 @@ const createPaymentLink = async (req, res) => {
       }
     );
 
+    console.log("Cashfree response: ", response.data);
+
     //Extract payment link from response
     const paymentLink = response.data?.payment_link || null;
     if (!paymentLink) {
