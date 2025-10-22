@@ -9,6 +9,10 @@ const createOrder = async (req, res) => {
     const { customerId, products, totalAmount, paymentMethod, paymentDetails } =
       req.body;
 
+    console.log("Request body:", req.body);
+    console.log("Products array:", products);
+    console.log("CustomerId:", customerId);
+
     if (!customerId || !products || products.length === 0) {
       return res.status(400).json({ message: "Invalid order data" });
     }
