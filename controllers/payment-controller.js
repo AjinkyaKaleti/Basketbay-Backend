@@ -121,7 +121,71 @@ const handleCashfreeWebhook = async (req, res) => {
   }
 };
 
+const verifyPayment = async (req, res) => {
+  try {
+    const { sessionId } = req.body;
+
+    if (!sessionId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Session ID required" });
+    }
+
+    // Call Cashfree API to check payment status
+    const response = await axios.get(
+      `${CASHFREE_BASE_URL}/orders/${sessionId}`,
+      {
+        headers: {
+          "x-client-id": process.env.CASHFREE_APP_ID,
+          "x-client-secret": process.env.CASHFREE_SECRET_KEY,
+          "x-api-version": "2022-09-01",
+        },
+      }
+    );
+
+    const orderStatus = response.data?.order_status; // PAID, PENDING, FAILED
+    const cashfreeOrderId = response.data?.order_id;
+    const paymentRefId = response.data?.reference_id;
+
+    // Update order in DB
+    const order = await Order.findOne({
+      "paymentDetails.cashfree_order_id": cashfreeOrderId,
+    });
+
+    if (!order) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
+    }
+
+    order.status = orderStatus === "PAID" ? "Paid" : orderStatus;
+    order.paymentDetails.payment_status =
+      orderStatus === "PAID" ? "SUCCESS" : orderStatus;
+    order.paymentDetails.payment_reference_id = paymentRefId;
+
+    await order.save();
+
+    res.json({
+      success: orderStatus === "PAID",
+      status: orderStatus,
+      message:
+        orderStatus === "PAID" ? "Payment successful" : "Payment not completed",
+    });
+  } catch (err) {
+    console.error(
+      "Payment verification error:",
+      err.response?.data || err.message
+    );
+    res.status(500).json({
+      success: false,
+      message: "Error verifying payment",
+      error: err.response?.data || err.message,
+    });
+  }
+};
+
 module.exports = {
   createPaymentLink,
   handleCashfreeWebhook,
+  verifyPayment,
 };
