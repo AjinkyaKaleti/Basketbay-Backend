@@ -14,9 +14,11 @@ const createOrder = async (req, res) => {
     }
 
     // Check if user has pending order for the same products
+    const productIds = products.map((p) => p.productId).filter((id) => id); // remove undefined/null
+
     const existingPending = await Order.findOne({
       customer: customerId,
-      "products.productId": { $in: products.map((p) => p.productId) },
+      "products.productId": { $in: productIds },
       status: "PENDING",
     });
 
