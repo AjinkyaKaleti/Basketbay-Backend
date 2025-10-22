@@ -8,6 +8,6 @@ const router = express.Router();
 
 router.post("/create-link", createPaymentLink);
 router.post("/webhook", handleCashfreeWebhook);
-router.post("/verify/:orderId", verifyPayment);
+router.post("/verify", verifyPayment);
 
 module.exports = router;

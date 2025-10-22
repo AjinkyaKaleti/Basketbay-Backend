@@ -33,6 +33,7 @@ const createPaymentLink = async (req, res) => {
         },
         order_meta: {
           return_url: "https://basketbay.in/payment-status",
+          notify_url: "https://basketbay.in/api/payment/verify",
         },
       },
       {
@@ -128,40 +129,49 @@ const verifyPayment = async (req, res) => {
     if (!sessionId) {
       return res
         .status(400)
-        .json({ success: false, message: "Session ID required" });
+        .json({ success: false, message: "orderId required" });
     }
 
     // Call Cashfree API to check payment status
     const response = await axios.get(
-      `${CASHFREE_BASE_URL}/orders/${sessionId}`,
+      `${process.env.CASHFREE_BASE_URL}/sessions/${sessionId}`,
       {
         headers: {
           "x-client-id": process.env.CASHFREE_APP_ID,
           "x-client-secret": process.env.CASHFREE_SECRET_KEY,
-          "x-api-version": "2025-01-01",
+          "x-api-version": "2023-08-01",
         },
       }
     );
 
-    const orderStatus = response.data?.order_status; // PAID, PENDING, FAILED
-    const cashfreeOrderId = response.data?.order_id;
-    const paymentRefId = response.data?.reference_id;
+    const data = response.data;
+    const orderStatus = data.order_status; // PAID, ACTIVE, FAILED, etc.
+    const cashfreeOrderId = data.order_id;
+    const orderAmount = data.order_amount;
 
-    // Update order in DB
+    //Find corresponding order in DB
     const order = await Order.findOne({
       "paymentDetails.cashfree_order_id": cashfreeOrderId,
     });
 
     if (!order) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Order not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Order not found in database",
+      });
     }
 
-    order.status = orderStatus === "PAID" ? "Paid" : orderStatus;
-    order.paymentDetails.payment_status =
-      orderStatus === "PAID" ? "SUCCESS" : orderStatus;
-    order.paymentDetails.payment_reference_id = paymentRefId;
+    //Prevent double deduction or duplicate updates
+    if (order.status !== "Paid" && orderStatus === "PAID") {
+      order.status = "Paid";
+      order.paymentVerifiedAt = new Date();
+
+      for (const item of order.products) {
+        await Product.findByIdAndUpdate(item.productId, {
+          $inc: { stock: -item.quantity },
+        });
+      }
+    }
 
     await order.save();
 
@@ -169,7 +179,10 @@ const verifyPayment = async (req, res) => {
       success: orderStatus === "PAID",
       status: orderStatus,
       message:
-        orderStatus === "PAID" ? "Payment successful" : "Payment not completed",
+        orderStatus === "PAID"
+          ? "Payment successful and inventory updated"
+          : "Payment not completed",
+      orderAmount: orderAmount,
     });
   } catch (err) {
     console.error(
