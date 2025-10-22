@@ -58,9 +58,11 @@ const createOrder = async (req, res) => {
 
     // Update product stock
     for (let item of products) {
-      await Product.findByIdAndUpdate(item.productId, {
-        $inc: { count: -item.quantity }, // reduce stock
-      });
+      if (item.productId && item.quantity > 0) {
+        await Product.findByIdAndUpdate(item.productId, {
+          $inc: { count: -item.quantity },
+        });
+      }
     }
 
     // Get customer's email from user collection
