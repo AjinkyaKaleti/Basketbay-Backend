@@ -17,8 +17,8 @@ const orderSchema = new mongoose.Schema(
     totalAmount: Number,
     status: {
       type: String,
-      enum: ["pending", "paid", "failed", "cancelled"],
-      default: "pending",
+      enum: ["PENDING", "PAID", "CANCELLED"],
+      default: "PENDING",
     },
     paymentDetails: {
       cashfree_order_id: { type: String },
