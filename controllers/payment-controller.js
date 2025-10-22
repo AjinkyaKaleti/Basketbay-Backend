@@ -138,7 +138,7 @@ const verifyPayment = async (req, res) => {
         headers: {
           "x-client-id": process.env.CASHFREE_APP_ID,
           "x-client-secret": process.env.CASHFREE_SECRET_KEY,
-          "x-api-version": "2022-09-01",
+          "x-api-version": "2025-01-01",
         },
       }
     );
