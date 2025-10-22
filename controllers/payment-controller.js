@@ -1,8 +1,7 @@
 const axios = require("axios");
 const Order = require("../models/user-order-modal");
 const User = require("../models/user-modal");
-// const CASHFREE_BASE_URL = "https://api.cashfree.com/pg"; // For PROD
-const CASHFREE_BASE_URL = "https://sandbox.cashfree.com/pg"; // For PROD
+const CASHFREE_BASE_URL = "https://api.cashfree.com/pg"; // For PROD
 
 const createPaymentLink = async (req, res) => {
   try {
@@ -40,7 +39,7 @@ const createPaymentLink = async (req, res) => {
         headers: {
           "x-client-id": process.env.CASHFREE_APP_ID,
           "x-client-secret": process.env.CASHFREE_SECRET_KEY,
-          "x-api-version": "2022-09-01",
+          "x-api-version": "2025-01-01",
           "Content-Type": "application/json",
         },
       }
@@ -55,8 +54,7 @@ const createPaymentLink = async (req, res) => {
     }
 
     // Construct the Cashfree hosted payment link
-    // const paymentLink = `https://payments.cashfree.com/pg/checkout?payment_session_id=${sessionId}`;
-    const paymentLink = `https://sandbox.cashfree.com/pg/checkout?payment_session_id=${sessionId}`;
+    const paymentLink = `https://payments.cashfree.com/pg/checkout?payment_session_id=${sessionId}`;
 
     //Save order in DB with pending status
     const pendingOrder = new Order({
