@@ -34,9 +34,10 @@ const createOrder = async (req, res) => {
       });
     }
 
-    // Determine order status
-    let status = "PENDING";
-    let paymentStatus = "PENDING"; // default
+    // Determine order status and payment status
+    let status = paymentMethod === "COD" ? "PENDING" : "PENDING";
+    let paymentStatus = paymentMethod === "COD" ? "PENDING" : "PENDING";
+
     if (
       paymentMethod === "online" &&
       paymentDetails?.cashfree_order_id &&
@@ -45,6 +46,8 @@ const createOrder = async (req, res) => {
       status = "Paid";
       paymentStatus = "SUCCESS";
     }
+
+    const paymentInfo = paymentDetails || {};
 
     const newOrder = new Order({
       customer: customerId,
@@ -96,6 +99,9 @@ const createOrder = async (req, res) => {
       <p><strong>Products:</strong><br/>${productList}</p>
       <p><strong>Total Amount:</strong> ₹${totalAmount}</p>
       <p><strong>Payment Method:</strong> ${paymentMethod}</p>
+       <p><strong>Payment Status:</strong> ${
+         paymentStatus === "PENDING" ? "Pending" : "Paid"
+       }</p>
       <p>We’ll notify you once your payment is confirmed.</p>
     `;
 
