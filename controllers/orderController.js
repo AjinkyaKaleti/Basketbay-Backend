@@ -5,21 +5,12 @@ const { sendEmail } = require("../utils/mailer");
 
 // POST: create a new order
 const createOrder = async (req, res) => {
-  console.log("➡️ Received createOrder request");
   console.log("Body:", JSON.stringify(req.body, null, 2));
   try {
     const { customerId, products, totalAmount, paymentMethod, paymentDetails } =
       req.body;
 
-    console.log("✅ Extracted values:", {
-      customerId,
-      totalAmount,
-      paymentMethod,
-      productsCount: products?.length,
-    });
-
     if (!customerId || !products || products.length === 0) {
-      console.log("❌ Invalid order data");
       return res.status(400).json({ message: "Invalid order data" });
     }
 
@@ -80,6 +71,7 @@ const createOrder = async (req, res) => {
 
     // Get customer's email from user collection
     const customer = await User.findById(customerId);
+    console.log("customer email test data : ", customer);
     if (!customer) {
       return res
         .status(404)
@@ -130,7 +122,6 @@ const createOrder = async (req, res) => {
       order: savedOrder,
     });
   } catch (err) {
-    console.error("❌ createOrder error details:");
     console.error(err); // full stack trace
     console.error("Error name:", err.name);
     console.error("Error message:", err.message);
@@ -143,9 +134,14 @@ const createOrder = async (req, res) => {
 // GET: fetch orders by customer for recent tab
 const getOrdersByCustomer = async (req, res) => {
   try {
-    const orders = await Order.find({ customer: req.params.customerId }).sort({
+    const orders = await Order.find({
+      customer: req.params.customerId,
+    }).sort({
       createdAt: -1,
     });
+    if (!orders) {
+      return res.status(404).json({ message: "No orders found" });
+    }
     res.json(orders);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch orders" });
