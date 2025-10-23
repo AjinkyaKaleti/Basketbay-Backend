@@ -56,12 +56,12 @@ const createOrder = async (req, res) => {
     const newOrder = new Order({
       customer: customerId,
       products,
-      paymentMethod: paymentMethod || "online",
+      paymentMethod: paymentMethod,
       paymentDetails: {
-        cashfree_order_id: paymentDetails?.cashfree_order_id || null,
-        payment_link: paymentDetails?.payment_link || null,
+        cashfree_order_id: paymentDetails?.cashfree_order_id || "",
+        payment_link: paymentDetails?.payment_link || "",
         payment_status: paymentStatus,
-        payment_reference_id: paymentDetails?.payment_reference_id || null,
+        payment_reference_id: paymentDetails?.payment_reference_id || "",
       },
       totalAmount,
       status,
