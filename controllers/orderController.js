@@ -47,21 +47,23 @@ const createOrder = async (req, res) => {
       paymentStatus = "SUCCESS";
     }
 
-    // const newOrder = new Order({
-    //   customer: customerId,
-    //   products,
-    //   paymentMethod: paymentMethod || "online",
-    //   paymentDetails: {
-    //     cashfree_order_id: paymentDetails?.cashfree_order_id || null,
-    //     payment_link: paymentDetails?.payment_link || null,
-    //     payment_status: paymentStatus,
-    //     payment_reference_id: paymentDetails?.payment_reference_id || null,
-    //   },
-    //   totalAmount,
-    //   status,
-    // });
+    const paymentInfo = paymentDetails || {};
 
-    // const savedOrder = await newOrder.save();
+    const newOrder = new Order({
+      customer: customerId,
+      products,
+      paymentMethod: paymentMethod || "online",
+      paymentDetails: {
+        cashfree_order_id: paymentDetails?.cashfree_order_id || null,
+        payment_link: paymentDetails?.payment_link || null,
+        payment_status: paymentStatus,
+        payment_reference_id: paymentDetails?.payment_reference_id || null,
+      },
+      totalAmount,
+      status,
+    });
+
+    const savedOrder = await newOrder.save();
 
     // Update product stock
     for (let item of products) {
