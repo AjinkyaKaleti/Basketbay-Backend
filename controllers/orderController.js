@@ -5,15 +5,21 @@ const { sendEmail } = require("../utils/mailer");
 
 // POST: create a new order
 const createOrder = async (req, res) => {
+  console.log("➡️ Received createOrder request");
+  console.log("Body:", JSON.stringify(req.body, null, 2));
   try {
     const { customerId, products, totalAmount, paymentMethod, paymentDetails } =
       req.body;
 
-    console.log("Request body:", req.body);
-    console.log("Products array:", products);
-    console.log("CustomerId:", customerId);
+    console.log("✅ Extracted values:", {
+      customerId,
+      totalAmount,
+      paymentMethod,
+      productsCount: products?.length,
+    });
 
     if (!customerId || !products || products.length === 0) {
+      console.log("❌ Invalid order data");
       return res.status(400).json({ message: "Invalid order data" });
     }
 
@@ -46,8 +52,6 @@ const createOrder = async (req, res) => {
       status = "Paid";
       paymentStatus = "SUCCESS";
     }
-
-    const paymentInfo = paymentDetails || {};
 
     const newOrder = new Order({
       customer: customerId,
@@ -126,8 +130,13 @@ const createOrder = async (req, res) => {
       order: savedOrder,
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error("❌ createOrder error details:");
+    console.error(err); // full stack trace
+    console.error("Error name:", err.name);
+    console.error("Error message:", err.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: err.message });
   }
 };
 
