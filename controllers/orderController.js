@@ -180,8 +180,45 @@ const getAllOrders = async (req, res) => {
   }
 };
 
+// PATCH: update order status (COD received → PAID)
+const updateOrderStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    // Validate input
+    if (!["PENDING", "PAID", "CANCELLED"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status value" });
+    }
+
+    const updatedOrder = await Order.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+
+    if (!updatedOrder) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Order status updated successfully",
+      order: updatedOrder,
+    });
+  } catch (error) {
+    console.error("Error updating order status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating order status",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createOrder,
   getOrdersByCustomer,
   getAllOrders,
+  updateOrderStatus,
 };

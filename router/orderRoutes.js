@@ -4,6 +4,7 @@ const {
   createOrder,
   getOrdersByCustomer,
   getAllOrders,
+  updateOrderStatus,
 } = require("../controllers/orderController");
 
 // POST: create order
@@ -14,5 +15,8 @@ router.get("/all", getAllOrders);
 
 // GET: get all orders for a customer
 router.get("/:customerId", getOrdersByCustomer);
+
+// New PATCH route for updating order status
+router.patch("/:id/status", updateOrderStatus);
 
 module.exports = router;
