@@ -167,6 +167,8 @@ const getAllOrders = async (req, res) => {
       paymentMethod: order.paymentMethod,
       totalAmount: order.totalAmount,
       createdAt: order.createdAt,
+      status: order.status,
+      paymentStatus: order.paymentDetails?.payment_status || "PENDING",
       products: order.products.map((p) => ({
         name: p.name || p.productId?.name,
         price: p.price || p.productId?.price,
@@ -180,39 +182,38 @@ const getAllOrders = async (req, res) => {
   }
 };
 
-// PATCH: update order status (COD received → PAID)
+// PATCH: update order status (for admin panel)
 const updateOrderStatus = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { orderId } = req.params;
     const { status } = req.body;
 
-    // Validate input
-    if (!["PENDING", "PAID", "CANCELLED"].includes(status)) {
-      return res.status(400).json({ message: "Invalid status value" });
-    }
-
     const updatedOrder = await Order.findByIdAndUpdate(
-      id,
-      { status },
+      orderId,
+      {
+        status,
+        "paymentDetails.payment_status":
+          status === "PAID" ? "SUCCESS" : "PENDING",
+      },
       { new: true }
     );
 
     if (!updatedOrder) {
-      return res.status(404).json({ message: "Order not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
     }
 
-    return res.status(200).json({
+    res.json({
       success: true,
       message: "Order status updated successfully",
       order: updatedOrder,
     });
-  } catch (error) {
-    console.error("Error updating order status:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error while updating order status",
-      error: error.message,
-    });
+  } catch (err) {
+    console.error("Error updating order status:", err);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to update status" });
   }
 };
 
