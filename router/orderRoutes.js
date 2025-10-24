@@ -17,6 +17,6 @@ router.get("/all", getAllOrders);
 router.get("/:customerId", getOrdersByCustomer);
 
 // New PATCH route for updating order status
-router.patch("/:id/status", updateOrderStatus);
+router.patch("/:orderId/status", updateOrderStatus);
 
 module.exports = router;
