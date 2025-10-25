@@ -130,6 +130,7 @@ const verifyOtp = async (req, res) => {
           email: user.email,
           firstName: user.firstname,
           lastName: user.lastname,
+          mobile: user.mobile,
         },
       });
     }
