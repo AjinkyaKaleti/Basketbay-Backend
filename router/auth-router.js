@@ -8,6 +8,7 @@ const {
   otpLogin,
   findEmailByMobile,
   handleAdminAccess,
+  updateProfile,
 } = require("../controllers/auth-controller");
 
 // Home route
@@ -30,5 +31,8 @@ router.post("/find-email-by-mobile", findEmailByMobile);
 
 // POST /api/auth/admin
 router.post("/admin", handleAdminAccess);
+
+// POST /api/auth/update-profile
+router.patch("/update-profile", updateProfile);
 
 module.exports = router;
